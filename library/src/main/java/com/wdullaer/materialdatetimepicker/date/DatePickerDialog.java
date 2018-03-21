@@ -251,7 +251,7 @@ public class DatePickerDialog extends DialogFragment implements
         if (Build.VERSION.SDK_INT < 18) {
             VERSION_2_FORMAT = new SimpleDateFormat(activity.getResources().getString(R.string.mdtp_date_v2_daymonthyear), mLocale);
         } else {
-            VERSION_2_FORMAT = new SimpleDateFormat(DateFormat.getBestDateTimePattern(mLocale, "EEEMMMdd"), mLocale);
+            VERSION_2_FORMAT = new SimpleDateFormat(DateFormat.getBestDateTimePattern(mLocale, "EEEE d MMMM"), mLocale);
         }
         VERSION_2_FORMAT.setTimeZone(getTimeZone());
     }

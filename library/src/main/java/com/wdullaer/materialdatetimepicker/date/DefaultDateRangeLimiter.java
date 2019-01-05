@@ -121,7 +121,7 @@ class DefaultDateRangeLimiter implements DateRangeLimiter {
     }
 
     @Nullable Calendar[] getSelectableDays() {
-         return selectableDays.isEmpty() ? null : selectableDays.toArray(new Calendar[0]);
+         return selectableDays.toArray(new Calendar[0]);
     }
 
     @Nullable Calendar[] getDisabledDays() {

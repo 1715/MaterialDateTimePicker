@@ -103,11 +103,13 @@ public class TimePickerDialog extends DialogFragment implements
     private static final int PULSE_ANIMATOR_DELAY = 300;
 
     private OnTimeSetListener mCallback;
+    private OnNeutralActionListener neutralCallback;
     private DialogInterface.OnCancelListener mOnCancelListener;
     private DialogInterface.OnDismissListener mOnDismissListener;
 
     private HapticFeedbackController mHapticFeedbackController;
 
+    private Button mNeutralButton;
     private Button mCancelButton;
     private Button mOkButton;
     private TextView mHourView;
@@ -137,6 +139,9 @@ public class TimePickerDialog extends DialogFragment implements
     private boolean mDismissOnPause;
     private boolean mEnableSeconds;
     private boolean mEnableMinutes;
+    private int mNeutralResid;
+    private String mNeutralString;
+    private int mNeutralColor;
     private int mOkResid;
     private String mOkString;
     private int mOkColor;
@@ -179,6 +184,15 @@ public class TimePickerDialog extends DialogFragment implements
          * @param second The second that was set
          */
         void onTimeSet(TimePickerDialog view, int hourOfDay, int minute, int second);
+    }
+
+    /**
+     * The callback interface used to indicate the user is done filling in
+     * the time (they clicked on the 'Set' button).
+     */
+    public interface OnNeutralActionListener {
+
+        void onNeutralActionExecuted();
     }
 
     public TimePickerDialog() {
@@ -244,6 +258,8 @@ public class TimePickerDialog extends DialogFragment implements
         mEnableMinutes = true;
         mOkResid = R.string.mdtp_ok;
         mOkColor = -1;
+        mNeutralColor = -1;
+        mNeutralResid = R.string.mdtp_neutral;
         mCancelResid = R.string.mdtp_cancel;
         mCancelColor = -1;
         mVersion = Build.VERSION.SDK_INT < Build.VERSION_CODES.M ? Version.VERSION_1 : Version.VERSION_2;
@@ -285,6 +301,33 @@ public class TimePickerDialog extends DialogFragment implements
      */
     public void setAccentColor(@ColorInt int color) {
         mAccentColor = Color.argb(255, Color.red(color), Color.green(color), Color.blue(color));
+    }
+
+    /**
+     * Set the Neutral button visibility
+     * @param visibility visibility parameter
+     */
+    @SuppressWarnings("unused")
+    public void setNeutralButtonVisibility(int visibility) {
+        mNeutralButton.setVisibility(visibility);
+    }
+
+    /**
+     * Set the text color of the Neutral button
+     * @param color the color you want
+     */
+    @SuppressWarnings("unused")
+    public void setNeutralColor(String color) {
+        mNeutralColor = Color.parseColor(color);
+    }
+
+    /**
+     * Set the text color of the Neutral button
+     * @param color the color you want
+     */
+    @SuppressWarnings("unused")
+    public void setNeutralColor(@ColorInt int color) {
+        mNeutralColor = Color.argb(255, Color.red(color), Color.green(color), Color.blue(color));
     }
 
     /**
@@ -478,6 +521,10 @@ public class TimePickerDialog extends DialogFragment implements
         mCallback = callback;
     }
 
+    public void setOnNeutralActionListener(OnNeutralActionListener callback) {
+        neutralCallback = callback;
+    }
+
     public void setOnCancelListener(DialogInterface.OnCancelListener onCancelListener) {
         mOnCancelListener = onCancelListener;
     }
@@ -546,6 +593,26 @@ public class TimePickerDialog extends DialogFragment implements
     public void setInitialSelection(Timepoint time) {
         mInitialTime = roundToNearest(time);
         mInKbMode = false;
+    }
+
+
+    /**
+     * Set the label for the Neutral button (max 12 characters)
+     * @param neutralString A literal String to be used as the Ok button label
+     */
+    @SuppressWarnings("unused")
+    public void setNeutralText(String neutralString) {
+        mNeutralString = neutralString;
+    }
+
+    /**
+     * Set the label for the Neutral button (max 12 characters)
+     * @param neutralResid A resource ID to be used as the Ok button label
+     */
+    @SuppressWarnings("unused")
+    public void setNeutralText(@StringRes int neutralResid) {
+        mNeutralString = null;
+        mNeutralResid = neutralResid;
     }
 
     /**
@@ -774,6 +841,22 @@ public class TimePickerDialog extends DialogFragment implements
         else mCancelButton.setText(mCancelResid);
         mCancelButton.setVisibility(isCancelable() ? View.VISIBLE : View.GONE);
 
+
+        mNeutralButton = view.findViewById(R.id.mdtp_neutral);
+        mNeutralButton.setOnClickListener(v -> {
+            if (mInKbMode && isTypedTimeFullyLegal()) {
+                finishKbMode(false);
+            } else {
+                tryVibrate();
+            }
+            notifyOnNeutralActionListener();
+            dismiss();
+        });
+        mNeutralButton.setOnKeyListener(keyboardListener);
+        mNeutralButton.setTypeface(ResourcesCompat.getFont(context, R.font.robotomedium));
+        if(mNeutralString != null) mNeutralButton.setText(mNeutralString);
+        else mNeutralButton.setText(mNeutralResid);
+
         // Enable or disable the AM/PM view.
         if (mIs24HourMode) {
             mAmPmLayout.setVisibility(View.GONE);
@@ -988,6 +1071,8 @@ public class TimePickerDialog extends DialogFragment implements
         view.findViewById(R.id.mdtp_time_display).setBackgroundColor(mAccentColor);
 
         // Button text can have a different color
+        if (mNeutralColor != -1) mNeutralButton.setTextColor(mNeutralColor);
+        else mNeutralButton.setTextColor(mAccentColor);
         if (mOkColor != -1) mOkButton.setTextColor(mOkColor);
         else mOkButton.setTextColor(mAccentColor);
         if (mCancelColor != -1) mCancelButton.setTextColor(mCancelColor);
@@ -1904,6 +1989,12 @@ public class TimePickerDialog extends DialogFragment implements
     public void notifyOnDateListener() {
         if (mCallback != null) {
             mCallback.onTimeSet(this, mTimePicker.getHours(), mTimePicker.getMinutes(), mTimePicker.getSeconds());
+        }
+    }
+
+    public void notifyOnNeutralActionListener() {
+        if (neutralCallback != null) {
+            neutralCallback.onNeutralActionExecuted();
         }
     }
 

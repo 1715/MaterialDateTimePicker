@@ -192,7 +192,7 @@ public class TimePickerDialog extends DialogFragment implements
      */
     public interface OnNeutralActionListener {
 
-        void onNeutralActionExecuted();
+        void onNeutralActionExecuted(TimePickerDialog view);
     }
 
     public TimePickerDialog() {
@@ -1994,7 +1994,7 @@ public class TimePickerDialog extends DialogFragment implements
 
     public void notifyOnNeutralActionListener() {
         if (neutralCallback != null) {
-            neutralCallback.onNeutralActionExecuted();
+            neutralCallback.onNeutralActionExecuted(this);
         }
     }
 

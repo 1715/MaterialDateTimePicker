@@ -259,7 +259,7 @@ public abstract class DayPickerView extends RecyclerView implements OnDateChange
         return getChildAdapterPosition(getMostVisibleMonth());
     }
 
-    public MonthView getMostVisibleMonth() {
+    public @Nullable MonthView getMostVisibleMonth() {
         boolean verticalScroll = mController.getScrollOrientation() == DatePickerDialog.ScrollOrientation.VERTICAL;
         final int maxSize = verticalScroll ? getHeight() : getWidth();
         int maxDisplayedSize = 0;
@@ -355,8 +355,12 @@ public abstract class DayPickerView extends RecyclerView implements OnDateChange
 
     void accessibilityAnnouncePageChanged() {
         MonthView mv = getMostVisibleMonth();
-        String monthYear = getMonthAndYearString(mv.mMonth, mv.mYear, mController.getLocale());
-        Utils.tryAccessibilityAnnounce(this, monthYear);
+        if (mv != null) {
+            String monthYear = getMonthAndYearString(mv.mMonth, mv.mYear, mController.getLocale());
+            Utils.tryAccessibilityAnnounce(this, monthYear);
+        } else {
+            Log.w("DayPickerView", "Tried to announce before layout was initialized");
+        }
     }
 
     private static String getMonthAndYearString(int month, int year, Locale locale) {

@@ -18,33 +18,30 @@ package com.wdullaer.materialdatetimepicker.date;
 
 import android.animation.ObjectAnimator;
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.ColorInt;
-import androidx.annotation.NonNull;
-import androidx.annotation.StringRes;
-import androidx.fragment.app.DialogFragment;
-import androidx.core.content.ContextCompat;
-import androidx.core.content.res.ResourcesCompat;
 import android.text.format.DateFormat;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
+import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
+import androidx.annotation.StringRes;
+import androidx.appcompat.app.AppCompatDialogFragment;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 import com.wdullaer.materialdatetimepicker.HapticFeedbackController;
 import com.wdullaer.materialdatetimepicker.R;
 import com.wdullaer.materialdatetimepicker.Utils;
@@ -59,7 +56,7 @@ import java.util.TimeZone;
 /**
  * Dialog allowing users to select a date.
  */
-public class DatePickerDialog extends DialogFragment implements
+public class DatePickerDialog extends AppCompatDialogFragment implements
         OnClickListener, DatePickerController {
 
     public enum Version {
@@ -135,17 +132,17 @@ public class DatePickerDialog extends DialogFragment implements
     private HashSet<Calendar> highlightedDays = new HashSet<>();
     private boolean mThemeDark = false;
     private boolean mThemeDarkChanged = false;
-    private int mAccentColor = -1;
+    private Integer mAccentColor = null;
     private boolean mVibrate = true;
     private boolean mDismissOnPause = false;
     private boolean mAutoDismiss = false;
     private int mDefaultView = MONTH_AND_DAY_VIEW;
     private int mOkResid = R.string.mdtp_ok;
     private String mOkString;
-    private int mOkColor = -1;
+    private Integer mOkColor = null;
     private int mCancelResid = R.string.mdtp_cancel;
     private String mCancelString;
-    private int mCancelColor = -1;
+    private Integer mCancelColor = null;
     private Version mVersion;
     private ScrollOrientation mScrollOrientation;
     private TimeZone mTimezone;
@@ -181,9 +178,7 @@ public class DatePickerDialog extends DialogFragment implements
     /**
      * The callback used to notify other date picker components of a change in selected date.
      */
-    @SuppressWarnings("WeakerAccess")
     protected interface OnDateChangedListener {
-
         void onDateChanged();
     }
 
@@ -211,7 +206,7 @@ public class DatePickerDialog extends DialogFragment implements
      * @param callback How the parent is notified that the date is set.
      * @return a new DatePickerDialog instance
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public static DatePickerDialog newInstance(OnDateSetListener callback) {
         Calendar now = Calendar.getInstance();
         return DatePickerDialog.newInstance(callback, now);
@@ -225,7 +220,7 @@ public class DatePickerDialog extends DialogFragment implements
      *                         TimeZone of the Calendar object)
      * @return a new DatePickerDialog instance
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public static DatePickerDialog newInstance(OnDateSetListener callback, Calendar initialSelection) {
         DatePickerDialog ret = new DatePickerDialog();
         ret.initialize(callback, initialSelection);
@@ -256,6 +251,7 @@ public class DatePickerDialog extends DialogFragment implements
         final Activity activity = requireActivity();
         activity.getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        setStyle(AppCompatDialogFragment.STYLE_NO_TITLE, 0);
         mCurrentView = UNINITIALIZED;
         if (savedInstanceState != null) {
             mCalendar.set(Calendar.YEAR, savedInstanceState.getInt(KEY_SELECTED_YEAR));
@@ -290,7 +286,7 @@ public class DatePickerDialog extends DialogFragment implements
         outState.putSerializable(KEY_HIGHLIGHTED_DAYS, highlightedDays);
         outState.putBoolean(KEY_THEME_DARK, mThemeDark);
         outState.putBoolean(KEY_THEME_DARK_CHANGED, mThemeDarkChanged);
-        outState.putInt(KEY_ACCENT, mAccentColor);
+        if (mAccentColor != null) outState.putInt(KEY_ACCENT, mAccentColor);
         outState.putBoolean(KEY_VIBRATE, mVibrate);
         outState.putBoolean(KEY_DISMISS, mDismissOnPause);
         outState.putBoolean(KEY_AUTO_DISMISS, mAutoDismiss);
@@ -298,10 +294,10 @@ public class DatePickerDialog extends DialogFragment implements
         outState.putString(KEY_TITLE, mTitle);
         outState.putInt(KEY_OK_RESID, mOkResid);
         outState.putString(KEY_OK_STRING, mOkString);
-        outState.putInt(KEY_OK_COLOR, mOkColor);
+        if (mOkColor != null) outState.putInt(KEY_OK_COLOR, mOkColor);
         outState.putInt(KEY_CANCEL_RESID, mCancelResid);
         outState.putString(KEY_CANCEL_STRING, mCancelString);
-        outState.putInt(KEY_CANCEL_COLOR, mCancelColor);
+        if (mCancelColor != null) outState.putInt(KEY_CANCEL_COLOR, mCancelColor);
         outState.putSerializable(KEY_VERSION, mVersion);
         outState.putSerializable(KEY_SCROLL_ORIENTATION, mScrollOrientation);
         outState.putSerializable(KEY_TIMEZONE, mTimezone);
@@ -329,17 +325,17 @@ public class DatePickerDialog extends DialogFragment implements
             highlightedDays = (HashSet<Calendar>) savedInstanceState.getSerializable(KEY_HIGHLIGHTED_DAYS);
             mThemeDark = savedInstanceState.getBoolean(KEY_THEME_DARK);
             mThemeDarkChanged = savedInstanceState.getBoolean(KEY_THEME_DARK_CHANGED);
-            mAccentColor = savedInstanceState.getInt(KEY_ACCENT);
+            if (savedInstanceState.containsKey(KEY_ACCENT)) mAccentColor = savedInstanceState.getInt(KEY_ACCENT);
             mVibrate = savedInstanceState.getBoolean(KEY_VIBRATE);
             mDismissOnPause = savedInstanceState.getBoolean(KEY_DISMISS);
             mAutoDismiss = savedInstanceState.getBoolean(KEY_AUTO_DISMISS);
             mTitle = savedInstanceState.getString(KEY_TITLE);
             mOkResid = savedInstanceState.getInt(KEY_OK_RESID);
             mOkString = savedInstanceState.getString(KEY_OK_STRING);
-            mOkColor = savedInstanceState.getInt(KEY_OK_COLOR);
+            if (savedInstanceState.containsKey(KEY_OK_COLOR)) mOkColor = savedInstanceState.getInt(KEY_OK_COLOR);
             mCancelResid = savedInstanceState.getInt(KEY_CANCEL_RESID);
             mCancelString = savedInstanceState.getString(KEY_CANCEL_STRING);
-            mCancelColor = savedInstanceState.getInt(KEY_CANCEL_COLOR);
+            if (savedInstanceState.containsKey(KEY_CANCEL_COLOR)) mCancelColor = savedInstanceState.getInt(KEY_CANCEL_COLOR);
             mVersion = (Version) savedInstanceState.getSerializable(KEY_VERSION);
             mScrollOrientation = (ScrollOrientation) savedInstanceState.getSerializable(KEY_SCROLL_ORIENTATION);
             mTimezone = (TimeZone) savedInstanceState.getSerializable(KEY_TIMEZONE);
@@ -434,17 +430,22 @@ public class DatePickerDialog extends DialogFragment implements
         cancelButton.setVisibility(isCancelable() ? View.VISIBLE : View.GONE);
 
         // If an accent color has not been set manually, get it from the context
-        if (mAccentColor == -1) {
+        if (mAccentColor == null) {
             mAccentColor = Utils.getAccentColorFromThemeIfAvailable(getActivity());
         }
         if (mDatePickerHeaderView != null) mDatePickerHeaderView.setBackgroundColor(Utils.darkenColor(mAccentColor));
         view.findViewById(R.id.mdtp_day_picker_selected_date_layout).setBackgroundColor(mAccentColor);
 
         // Buttons can have a different color
-        if (mOkColor != -1) okButton.setTextColor(mOkColor);
-        else okButton.setTextColor(mAccentColor);
-        if (mCancelColor != -1) cancelButton.setTextColor(mCancelColor);
-        else cancelButton.setTextColor(mAccentColor);
+        if (mOkColor == null) {
+            mOkColor = mAccentColor;
+        }
+        okButton.setTextColor(mOkColor);
+
+        if (mCancelColor == null) {
+            mCancelColor = mAccentColor;
+        }
+        cancelButton.setTextColor(mCancelColor);
 
         if (getDialog() == null) {
             view.findViewById(R.id.mdtp_done_background).setVisibility(View.GONE);
@@ -474,13 +475,6 @@ public class DatePickerDialog extends DialogFragment implements
             View view = onCreateView(requireActivity().getLayoutInflater(), viewGroup, null);
             viewGroup.addView(view);
         }
-    }
-
-    @Override @NonNull
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        Dialog dialog = super.onCreateDialog(savedInstanceState);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        return dialog;
     }
 
     @Override
@@ -995,6 +989,7 @@ public class DatePickerDialog extends DialogFragment implements
      * Set a custom locale to be used when generating various strings in the picker
      * @param locale Locale
      */
+    @SuppressWarnings("WeakerAccess")
     public void setLocale(Locale locale) {
         mLocale = locale;
         mWeekStart = Calendar.getInstance(mTimezone, mLocale).getFirstDayOfWeek();

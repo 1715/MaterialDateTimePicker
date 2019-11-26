@@ -42,7 +42,7 @@ Date Picker | Time Picker
  The easiest way to add the Material DateTime Picker library to your project is by adding it as a dependency to your `build.gradle`
 ```groovy
 dependencies {
-    implementation 'com.wdullaer:materialdatetimepicker:4.1.1'
+    implementation 'com.wdullaer:materialdatetimepicker:4.2.3'
 }
 ```
 
@@ -243,15 +243,16 @@ This library depends on some androidx support libraries. Because the jvm allows 
 Using the following snippet in your apps `build.gradle` file you can exclude this library's transitive appcompat library dependency from being installed.
 
 ```groovy
-implementation ('com.wdullaer:materialdatetimepicker:4.1.1') {
+implementation ('com.wdullaer:materialdatetimepicker:4.2.3') {
         exclude group: 'androidx.appcompat'
+        exclude group: 'androidx.recyclerview'
 }
 ```
 
 MaterialDateTimepicker uses the following androidx libraries:
 
 ```groovy
-implementation 'androidx.appcompat:appcompat:1.0.0'
+implementation 'androidx.appcompat:appcompat:1.0.2'
 implementation 'androidx.recyclerview:recyclerview:1.0.0'
 ```
 
@@ -340,8 +341,12 @@ When you provide a custom `DateRangeLimiter` the built-in methods for setting th
 [Material Components](https://github.com/material-components/material-components-android) replaces all instances of `Button` with an instance of `MaterialButton` when using one of its regular themes: https://github.com/material-components/material-components-android/blob/master/docs/getting-started.md#material-components-themes  
 The default version of `MaterialButton` uses `colorPrimary` as the background color. Because Material Components replaces the View replacer with their own implementation there is not much I can do to fix this from this library.
 
-There are two workarounds:
+There are a few workarounds:
 * Use one of the bridge themes, which do not replace the View Inflater
+* Overwrite the style of the mdtp buttons with one that inherits from Material Components text buttons, as described [here](https://github.com/wdullaer/MaterialDateTimePicker/issues/523#issuecomment-477349333):
+    ```xml
+    <style name="mdtp_ActionButton.Text" parent="Widget.MaterialComponents.Button.TextButton.Dialog"/>
+    ```
 * Overwrite the View inflater again in your application theme by adding the following statement in your application theme:
     ```xml
   <item name="viewInflaterClass">androidx.appcompat.app.AppCompatViewInflater</item>
